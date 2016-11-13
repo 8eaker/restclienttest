@@ -7,6 +7,13 @@
     <groupId>uk.co.bluetangerine</groupId>
     <artifactId>social-rank-service</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>uk.co.bluetangerine</groupId>
+            <artifactId>social-rank-domain</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
 
 </project>

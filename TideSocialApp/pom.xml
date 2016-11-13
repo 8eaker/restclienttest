@@ -18,5 +18,16 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
             <version>1.10.19</version>
-        </dependency>    </dependencies>
+        </dependency>
+        <dependency>
+            <groupId>uk.co.bluetangerine</groupId>
+            <artifactId>social-rank-service</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.0</version>
+        </dependency>
+    </dependencies>
 </project>
