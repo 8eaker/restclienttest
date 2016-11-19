@@ -46,6 +46,7 @@ public class SocialRankControllerTest {
         Mockito.doReturn(outputStream).when(httpExchangeMock).getResponseBody();
 
         Assert.assertTrue(underTest.validRequest(httpExchangeMock));
+
      }
 
     @Test

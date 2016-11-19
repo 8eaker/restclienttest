@@ -24,27 +24,28 @@ public class SocialRankController implements HttpHandler {
         StoryRankDto storyRankDto = null;
         //Default Bad request responseCode;
         Integer responseCode = 400;
-        String responseMessage "Invalid request";
+        String responseMessage = "Invalid request";
 
-        //All current requests must have an Id, so check first
-        if (httpExchange.getRequestURI().getQuery().contains("id")) {
+        //Perform simple validation before getting started
+        if (validRequest(httpExchange)) {
             //Get the request parameters i.e. Id
             Map<String, Integer> params = getRequestParams(httpExchange.getRequestURI().getQuery());
             //Check the HTTP verb to help route the request
             if (httpExchange.getRequestMethod().equals("GET")) {
                 Integer storyRank = socialRankService.getStoryRank(params.get("id"));
+                //If we find a story, then set the DTO and success response code
                 if (null != storyRank) {
-                    storyRankDto = new StoryRankDto(storyRank));
+                    storyRankDto = new StoryRankDto(storyRank);
                     responseCode = 200;
                 } else {
                     responseCode = 404;
                     responseMessage = "Story Not Found";
                 }
             } else if (httpExchange.getRequestMethod().equals("POST")) {
-                //TODO: hardcoded parameters!
-                socialRankService.setStoryRank(1, 1);
-                //TODO: return??
-            } else if (httpExchange.getRequestMethod().equals("PUT") && httpExchange.getRequestURI().getQuery().contains("dislike")) {
+                storyRankDto = new StoryRankDto(socialRankService.setStoryRank(params.get("id"), params.get("rank")));
+                responseCode = 200;
+            } else if (httpExchange.getRequestMethod().equals("PUT") &&
+                    getRequestSuffix(httpExchange.getRequestURI().getQuery()).equals("dislike")) {
                 storyRankDto = new StoryRankDto(socialRankService.decrementStoryRank(params.get("id")));
                 if (null != storyRankDto) {
                     responseCode = 200;
@@ -52,7 +53,8 @@ public class SocialRankController implements HttpHandler {
                     responseCode = 404;
                     responseMessage = "Story Not Found. Unable to dislike story";
                 }
-            } else if (httpExchange.getRequestMethod().equals("PUT") && httpExchange.getRequestURI().getQuery().contains("like")) {
+            } else if (httpExchange.getRequestMethod().equals("PUT") &&
+                    getRequestSuffix(httpExchange.getRequestURI().getQuery()).equals("like")) {
                 storyRankDto = new StoryRankDto(socialRankService.incrementStoryRank(params.get("id")));
                 if (null != storyRankDto) {
                     responseCode = 200;
@@ -74,16 +76,24 @@ public class SocialRankController implements HttpHandler {
      * @throws IOException
      */
     protected Boolean validRequest(HttpExchange httpExchange) throws IOException {
-        String response;
-        // If the request contains at least ID param and is a GET,POST or PUT with additional parameter of 'likes'
-        if (httpExchange.getRequestURI().getQuery().contains("id")) {
-            if ((httpExchange.getRequestMethod().equals("GET") || httpExchange.getRequestMethod().equals("POST")) {
-                return true;
-            } else if (httpExchange.getRequestMethod().equals("PUT") && httpExchange.getRequestURI().getQuery().contains("likes")) {
-                return true;
-            }
+        String query = httpExchange.getRequestURI().getQuery();
+        if (null == query) {
             return false;
         }
+        String[] querySplit = httpExchange.getRequestURI().getQuery().split("/");
+        // If the request contains at least ID param and is a GET,POST or PUT with additional parameter of 'likes'
+        if (querySplit[0].substring(0, querySplit[0].indexOf('=')).equals("id")) {
+            if ((httpExchange.getRequestMethod().equals("GET") || httpExchange.getRequestMethod().equals("POST"))) {
+                return true;
+            } else if (httpExchange.getRequestMethod().equals("PUT") && (querySplit.length > 1 &&
+                    querySplit[1].equals("like") || querySplit.length > 1 && querySplit[1].equals("dislike"))) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
+    }
 
     protected void sendResponse(HttpExchange httpExchange, int code, String message, StoryRankDto storyRankDto) throws IOException {
         Gson gson = new Gson();
@@ -102,7 +112,7 @@ public class SocialRankController implements HttpHandler {
 
     protected Map<String, Integer> getRequestParams(String query) {
         Map<String, Integer> result = new HashMap<String, Integer>();
-        for (String param : query.split("&")) {
+        for (String param : query.substring(0,(query.indexOf('/') < 0) ? query.length() : query.indexOf('/')).split("&")) {
             String pair[] = param.split("=");
             if (pair.length > 1) {
                 result.put(pair[0], Integer.valueOf(pair[1]));
@@ -111,5 +121,12 @@ public class SocialRankController implements HttpHandler {
             }
         }
         return result;
+    }
+
+    protected String getRequestSuffix(String query) {
+        if (query.indexOf('/') > 0) {
+            return query.substring(query.indexOf('/')+1, query.length());
+        }
+        return "";
     }
 }

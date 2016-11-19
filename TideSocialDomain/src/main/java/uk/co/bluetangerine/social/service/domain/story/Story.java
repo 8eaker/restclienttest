@@ -9,7 +9,8 @@ public class Story {
     private int storyId;
     private AtomicInteger rank = new AtomicInteger();
 
-    public Story(int rank) {
+    public Story(int id, int rank) {
+        this.storyId = id;
         this.rank.set(rank);
     }
 
@@ -22,6 +23,7 @@ public class Story {
     }
 
     public int incrementRank() {
+
         return this.rank.incrementAndGet();
     }
 

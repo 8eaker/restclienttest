@@ -9,19 +9,22 @@ import java.util.Map;
 public class DefaultStoryRepository implements StoryRepository {
     Map<Integer, Story> stories = new HashMap<Integer, Story>();
 
-    public DefaultStoryRepository() {
-        // As this just in memory, start with a few Stories
-        // to test with.
-        saveStory(new Story(5));
-        saveStory(new Story(0));
-        saveStory(new Story(15));
+    //Use private package accessor to prevent
+    //creation outside of threadsafe singleton
+    DefaultStoryRepository() {
+        //Cheating a bit here as we have no interface
+        //to create stories, so create some here to
+        //test with
+        saveStory(new Story(getNextId(), 5));
+        saveStory(new Story(getNextId(), 0));
+        saveStory(new Story(getNextId(), 15));
     }
 
     public Story getStory(int id) {
         return stories.get(id);
     }
 
-    public Story saveStory(Story story) {
+    public synchronized Story saveStory(Story story) {
         story.setStoryId(getNextId());
         stories.put(story.getStoryId(), story);
         return stories.get(story.getStoryId());
