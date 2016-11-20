@@ -4,6 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by tony on 13/11/2016.
+ * Implementation of story object
+ * using AtomicInteger to prevent
+ * issues with updates or reads as
+ * ++ is two stage increment on regular
+ * integers
  */
 public class Story {
     private int storyId;
@@ -23,7 +28,6 @@ public class Story {
     }
 
     public int incrementRank() {
-
         return this.rank.incrementAndGet();
     }
 
@@ -37,7 +41,6 @@ public class Story {
 
     public int setRank(int rank) {
         this.rank.set(rank);
-
         return this.rank.get();
     }
 

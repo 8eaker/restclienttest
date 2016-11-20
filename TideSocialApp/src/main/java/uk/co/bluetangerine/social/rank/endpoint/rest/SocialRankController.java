@@ -8,7 +8,7 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import uk.co.bluetangerine.social.dto.StoryRankDto;
+import uk.co.bluetangerine.social.service.dto.StoryRankDto;
 import uk.co.bluetangerine.social.service.DefaultSocialRankService;
 import uk.co.bluetangerine.social.service.SocialRankService;
 
@@ -18,8 +18,24 @@ import uk.co.bluetangerine.social.service.SocialRankService;
  * methods
  */
 public class SocialRankController implements HttpHandler {
-    SocialRankService socialRankService = new DefaultSocialRankService();
+    //Set up the SocialRankService. We only have one implementation so far.
+    //but in the future, alternate implementations could be used using this
+    //interface
+    private SocialRankService socialRankService = new DefaultSocialRankService();
 
+    public SocialRankController() {
+    }
+
+    //Constructor to assist testing
+    public SocialRankController(SocialRankService socialRankService) {
+        this.socialRankService = socialRankService;
+    }
+
+    /**
+     * Method to handle and map the calls to the appropriate service calls
+     * @param httpExchange from server
+     * @throws IOException
+     */
     public void handle(HttpExchange httpExchange) throws IOException {
         StoryRankDto storyRankDto = null;
         //Default Bad request responseCode;
@@ -32,21 +48,26 @@ public class SocialRankController implements HttpHandler {
             Map<String, Integer> params = getRequestParams(httpExchange.getRequestURI().getQuery());
             //Check the HTTP verb to help route the request
             if (httpExchange.getRequestMethod().equals("GET")) {
-                Integer storyRank = socialRankService.getStoryRank(params.get("id"));
+                //From the basic validation, we already know Id is set, so safe to go ahead
+                storyRankDto = socialRankService.getStoryRank(params.get("id"));
                 //If we find a story, then set the DTO and success response code
-                if (null != storyRank) {
-                    storyRankDto = new StoryRankDto(storyRank);
+                if (null != storyRankDto) {
                     responseCode = 200;
                 } else {
                     responseCode = 404;
                     responseMessage = "Story Not Found";
                 }
             } else if (httpExchange.getRequestMethod().equals("POST")) {
-                storyRankDto = new StoryRankDto(socialRankService.setStoryRank(params.get("id"), params.get("rank")));
-                responseCode = 200;
+                storyRankDto = socialRankService.setStoryRank(params.get("id"), params.get("rank"));
+                if (null != storyRankDto) {
+                    responseCode = 200;
+                } else {
+                    responseCode = 404;
+                    responseMessage = "Story Not Found. Unable to set story";
+                }
             } else if (httpExchange.getRequestMethod().equals("PUT") &&
                     getRequestSuffix(httpExchange.getRequestURI().getQuery()).equals("dislike")) {
-                storyRankDto = new StoryRankDto(socialRankService.decrementStoryRank(params.get("id")));
+                storyRankDto = socialRankService.decrementStoryRank(params.get("id"));
                 if (null != storyRankDto) {
                     responseCode = 200;
                 } else {
@@ -55,7 +76,7 @@ public class SocialRankController implements HttpHandler {
                 }
             } else if (httpExchange.getRequestMethod().equals("PUT") &&
                     getRequestSuffix(httpExchange.getRequestURI().getQuery()).equals("like")) {
-                storyRankDto = new StoryRankDto(socialRankService.incrementStoryRank(params.get("id")));
+                storyRankDto = socialRankService.incrementStoryRank(params.get("id"));
                 if (null != storyRankDto) {
                     responseCode = 200;
                 } else {
@@ -64,22 +85,26 @@ public class SocialRankController implements HttpHandler {
                 }
             }
         }
-        //Send the appropriate response
+        //Send the appropriate response. IF none of the above conditions were met, we will
+        //send back the default invalid request message
         sendResponse(httpExchange, responseCode, responseMessage, storyRankDto);
     }
 
     /**
      * Simple pre validation routine
      *
-     * @param httpExchange
-     * @return
+     * @param httpExchange from server
+     * @return Boolean indicating if request successfully validated
      * @throws IOException
      */
-    protected Boolean validRequest(HttpExchange httpExchange) throws IOException {
+    Boolean validRequest(HttpExchange httpExchange) throws IOException {
         String query = httpExchange.getRequestURI().getQuery();
+        //All calls current require at least an id, so if nothing is present,
+        //we can bail out early
         if (null == query) {
             return false;
         }
+        //Spilt out the queries to string array
         String[] querySplit = httpExchange.getRequestURI().getQuery().split("/");
         // If the request contains at least ID param and is a GET,POST or PUT with additional parameter of 'likes'
         if (querySplit[0].substring(0, querySplit[0].indexOf('=')).equals("id")) {
@@ -95,7 +120,16 @@ public class SocialRankController implements HttpHandler {
         return false;
     }
 
-    protected void sendResponse(HttpExchange httpExchange, int code, String message, StoryRankDto storyRankDto) throws IOException {
+    /**
+     * Send JSON response. If successful (200) parse Dto to json for response, else send code
+     * and error message
+     * @param httpExchange from the server
+     * @param code http status code
+     * @param message for codes other than success 200
+     * @param storyRankDto containing details of StoryRank to output
+     * @throws IOException
+     */
+    void sendResponse(HttpExchange httpExchange, int code, String message, StoryRankDto storyRankDto) throws IOException {
         Gson gson = new Gson();
         OutputStream os;
         if (code == 200) {
@@ -110,22 +144,33 @@ public class SocialRankController implements HttpHandler {
         os.close();
     }
 
-    protected Map<String, Integer> getRequestParams(String query) {
+    /**
+     * Split out request parameters into a map for easier consumption by controller
+     * @param query String
+     * @return Map of ids
+     */
+    Map<String, Integer> getRequestParams(String query) {
         Map<String, Integer> result = new HashMap<String, Integer>();
+        //Get params before last / if there is one
         for (String param : query.substring(0,(query.indexOf('/') < 0) ? query.length() : query.indexOf('/')).split("&")) {
+            //Split by id/value splitter of -
             String pair[] = param.split("=");
             if (pair.length > 1) {
                 result.put(pair[0], Integer.valueOf(pair[1]));
-            } else {
-                result.put(pair[0], 0);
             }
         }
         return result;
     }
 
-    protected String getRequestSuffix(String query) {
+    /**
+     * Get request suffix after params if there are any.
+     * Used currently for like/dislike calls
+     * @param query String
+     * @return String value of suffix
+     */
+    String getRequestSuffix(String query) {
         if (query.indexOf('/') > 0) {
-            return query.substring(query.indexOf('/')+1, query.length());
+            return query.substring(query.indexOf('/') + 1, query.length());
         }
         return "";
     }

@@ -4,17 +4,27 @@ package uk.co.bluetangerine.social.service.usecase;
  * Created by tony on 12/11/2016.
  */
 public class GetRankUseCaseResponse implements UseCaseResponse {
-    int Rank = 0;
+    private int storyId = 0;
+    private int rank = 0;
 
-    public GetRankUseCaseResponse(int rank) {
-        Rank = rank;
+    GetRankUseCaseResponse(int storyId, int rank) {
+        this.storyId = storyId;
+        this.rank = rank;
+    }
+
+    public int getStoryId() {
+        return storyId;
+    }
+
+    public void setStoryId(int storyId) {
+        this.storyId = storyId;
     }
 
     public int getRank() {
-        return Rank;
+        return rank;
     }
 
     public void setRank(int rank) {
-        Rank = rank;
+        rank = rank;
     }
 }

@@ -10,7 +10,7 @@ public class GetRankUseCaseRequest implements UseCaseRequest {
         this.id = id;
     }
 
-    public int getId() {
+    int getId() {
         return id;
     }
 

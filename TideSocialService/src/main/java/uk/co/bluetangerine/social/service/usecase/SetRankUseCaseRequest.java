@@ -4,8 +4,8 @@ package uk.co.bluetangerine.social.service.usecase;
  * Created by tony on 13/11/2016.
  */
 public class SetRankUseCaseRequest implements UseCaseRequest{
-    int storyId;
-    int rank = 0;
+    private int storyId;
+    private int rank = 0;
 
 
     public SetRankUseCaseRequest(int storyId, int rank) {

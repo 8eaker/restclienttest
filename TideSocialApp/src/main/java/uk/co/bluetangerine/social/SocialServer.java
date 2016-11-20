@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 
 /**
  * Created by tony on 12/11/2016.
+ * Basic server to accept requests
  */
 public class SocialServer {
 

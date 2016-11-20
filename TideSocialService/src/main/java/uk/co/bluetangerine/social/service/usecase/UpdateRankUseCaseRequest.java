@@ -4,15 +4,15 @@ package uk.co.bluetangerine.social.service.usecase;
  * Created by tony on 13/11/2016.
  */
 public class UpdateRankUseCaseRequest implements UseCaseRequest{
-    int storyId;
-    boolean increment;
+    private int storyId;
+    private boolean increment;
 
     public UpdateRankUseCaseRequest(int storyId, boolean increment) {
         this.storyId = storyId;
         this.increment = increment;
     }
 
-    public int getStoryId() {
+    int getStoryId() {
         return storyId;
     }
 
@@ -20,7 +20,7 @@ public class UpdateRankUseCaseRequest implements UseCaseRequest{
         this.storyId = storyId;
     }
 
-    public boolean isIncrement() {
+    boolean isIncrement() {
         return increment;
     }
 

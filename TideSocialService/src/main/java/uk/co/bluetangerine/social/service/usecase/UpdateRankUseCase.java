@@ -8,15 +8,19 @@ import uk.co.bluetangerine.social.service.domain.story.StoryRepositorySingleton;
  * Created by tony on 12/11/2016.
  */
 public class UpdateRankUseCase implements Interactor<UpdateRankUseCaseRequest, UpdateUseCaseResponse> {
-    StoryRepository storyRepository = StoryRepositorySingleton.getInstance();
+    private StoryRepository storyRepository = StoryRepositorySingleton.getInstance();
     public UpdateUseCaseResponse execute(UpdateRankUseCaseRequest var1) {
         Story story = storyRepository.getStory(var1.getStoryId());
 
-        if (var1.isIncrement()) {
-            story.incrementRank();
+        if (null != story) {
+            if (var1.isIncrement()) {
+                story.incrementRank();
+            } else {
+                story.decrementRank();
+            }
         } else {
-            story.decrementRank();
+            return null;
         }
-        return new UpdateUseCaseResponse(story.getRank());
+        return new UpdateUseCaseResponse(story.getStoryId(), story.getRank());
     }
 }
